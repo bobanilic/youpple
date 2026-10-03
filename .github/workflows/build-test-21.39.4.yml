@@ -40,7 +40,7 @@ jobs:
       - name: Build and inject youpple
         shell: bash
         run: |
-          ./scripts/pipeline.sh ipa/YouTube-21.39.4.ipa -o out/youpple-YouTube-21.39.4-unsigned.ipa
+          ./scripts/pipeline.sh ipa/YouTube-21.39.4.ipa out/youpple-YouTube-21.39.4-unsigned.ipa
 
       - name: Verify patched IPA
         shell: bash

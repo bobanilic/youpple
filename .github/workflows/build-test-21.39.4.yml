@@ -4,7 +4,7 @@ name: Build YouTube 21.39.4 test IPA
 on:
   push:
     branches:
-      - work/yt-glass-v0.1
+      - work/yt-glass-v0.2
     paths:
       - .github/workflows/build-test-21.39.4.yml
 
@@ -40,19 +40,19 @@ jobs:
       - name: Build and inject youpple
         shell: bash
         run: |
-          ./scripts/pipeline.sh ipa/YouTube-21.39.4.ipa out/youpple-YouTube-21.39.4-unsigned.ipa
+          ./scripts/pipeline.sh ipa/YouTube-21.39.4.ipa out/youpple-v0.2-YouTube-21.39.4-unsigned.ipa
 
       - name: Verify patched IPA
         shell: bash
         run: |
-          unzip -tq out/youpple-YouTube-21.39.4-unsigned.ipa
-          APP_PLIST=$(unzip -Z1 out/youpple-YouTube-21.39.4-unsigned.ipa | grep -E '^Payload/[^/]+\.app/Info\.plist$' | head -1)
-          unzip -p out/youpple-YouTube-21.39.4-unsigned.ipa "$APP_PLIST" > /tmp/Info.plist
+          unzip -tq out/youpple-v0.2-YouTube-21.39.4-unsigned.ipa
+          APP_PLIST=$(unzip -Z1 out/youpple-v0.2-YouTube-21.39.4-unsigned.ipa | grep -E '^Payload/[^/]+\.app/Info\.plist$' | head -1)
+          unzip -p out/youpple-v0.2-YouTube-21.39.4-unsigned.ipa "$APP_PLIST" > /tmp/Info.plist
           plutil -p /tmp/Info.plist | grep -E 'CFBundleShortVersionString|UIDesignRequiresCompatibility' || true
 
       - name: Upload patched IPA
         uses: actions/upload-artifact@v4
         with:
-          name: youpple-YouTube-21.39.4-unsigned
-          path: out/youpple-YouTube-21.39.4-unsigned.ipa
+          name: youpple-v0.2-YouTube-21.39.4-unsigned
+          path: out/youpple-v0.2-YouTube-21.39.4-unsigned.ipa
           if-no-files-found: error

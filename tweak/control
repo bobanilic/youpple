@@ -1,0 +1,7 @@
+Package: com.bobanilic.youpple
+Name: youpple
+Architecture: iphoneos-arm
+Description: Liquid Glass customization layer for the YouTube iOS app
+Maintainer: bobanilic
+Author: bobanilic
+Section: Tweaks

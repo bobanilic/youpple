@@ -18,9 +18,12 @@ BOOL YPViewAlreadyHasGlass(UIView *view, NSString *identifier) {
 }
 
 UIVisualEffect *YPPreferredGlassEffect(void) {
+    // Keep this runtime-only so the tweak can still compile with an SDK that predates iOS 26.
+    // Apple's Objective-C API is +[UIGlassEffect effectWithStyle:] and Regular is enum value 0.
     Class glassClass = NSClassFromString(@"UIGlassEffect");
-    if (glassClass) {
-        id effect = [[glassClass alloc] init];
+    SEL factory = NSSelectorFromString(@"effectWithStyle:");
+    if (glassClass && [glassClass respondsToSelector:factory]) {
+        id effect = ((id (*)(id, SEL, NSInteger))objc_msgSend)(glassClass, factory, 0);
         SEL setInteractive = NSSelectorFromString(@"setInteractive:");
         if ([effect respondsToSelector:setInteractive]) {
             ((void (*)(id, SEL, BOOL))objc_msgSend)(effect, setInteractive, YES);
@@ -45,7 +48,9 @@ UIVisualEffectView *YPInstallGlassBackdrop(UIView *hostView, CGFloat cornerRadiu
     glass.userInteractionEnabled = NO;
     glass.translatesAutoresizingMaskIntoConstraints = NO;
     glass.layer.cornerRadius = cornerRadius;
-    glass.layer.cornerCurve = kCACornerCurveContinuous;
+    if ([glass.layer respondsToSelector:@selector(setCornerCurve:)]) {
+        glass.layer.cornerCurve = kCACornerCurveContinuous;
+    }
     glass.clipsToBounds = YES;
     glass.accessibilityIdentifier = [@"youpple.glass." stringByAppendingString:identifier];
 

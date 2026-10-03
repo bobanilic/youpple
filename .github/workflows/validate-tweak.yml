@@ -1,0 +1,35 @@
+name: Validate tweak
+
+on:
+  push:
+    branches:
+      - "work/**"
+      - main
+  pull_request:
+
+jobs:
+  build-tweak:
+    runs-on: macos-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          brew install make ldid dpkg
+          git clone --recursive --depth=1 https://github.com/theos/theos.git "$HOME/theos"
+          echo "THEOS=$HOME/theos" >> "$GITHUB_ENV"
+
+      - name: Validate shell and plist files
+        shell: bash
+        run: |
+          bash -n scripts/pipeline.sh
+          plutil -lint plist/liquid-glass.plist
+
+      - name: Build tweak package
+        shell: bash
+        run: |
+          gmake -C tweak clean package DEBUG=0 FINALPACKAGE=1

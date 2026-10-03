@@ -1,0 +1,7 @@
+.DS_Store
+out/
+ipa/
+tweak/.theos/
+tweak/packages/
+*.ipa
+*.deb

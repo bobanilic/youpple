@@ -1,0 +1,58 @@
+name: Build YouTube 21.39.4 test IPA
+
+# One-shot device test build for the exact IPA supplied in chat.
+on:
+  push:
+    branches:
+      - work/yt-glass-v0.1
+    paths:
+      - .github/workflows/build-test-21.39.4.yml
+
+jobs:
+  build:
+    runs-on: macos-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        shell: bash
+        run: |
+          brew install make ldid dpkg uv
+          if [ ! -d "$HOME/theos" ]; then
+            git clone --recursive https://github.com/theos/theos.git "$HOME/theos"
+          fi
+          echo "THEOS=$HOME/theos" >> "$GITHUB_ENV"
+          uv tool install "cyan @ git+https://github.com/asdfzxcvbn/pyzule-rw"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Download YouTube 21.39.4 IPA
+        shell: bash
+        run: |
+          mkdir -p ipa
+          curl --fail --location --retry 3 --retry-all-errors \
+            'https://fastsign.dev/tg-ipa/iosdecrypted/224589-%5BTG@i_osd%5DYT_21.39.4_KC.ipa' \
+            -o ipa/YouTube-21.39.4.ipa
+          unzip -tq ipa/YouTube-21.39.4.ipa
+
+      - name: Build and inject youpple
+        shell: bash
+        run: |
+          ./scripts/pipeline.sh ipa/YouTube-21.39.4.ipa out/youpple-YouTube-21.39.4-unsigned.ipa
+
+      - name: Verify patched IPA
+        shell: bash
+        run: |
+          unzip -tq out/youpple-YouTube-21.39.4-unsigned.ipa
+          APP_PLIST=$(unzip -Z1 out/youpple-YouTube-21.39.4-unsigned.ipa | grep -E '^Payload/[^/]+\.app/Info\.plist$' | head -1)
+          unzip -p out/youpple-YouTube-21.39.4-unsigned.ipa "$APP_PLIST" > /tmp/Info.plist
+          plutil -p /tmp/Info.plist | grep -E 'CFBundleShortVersionString|UIDesignRequiresCompatibility' || true
+
+      - name: Upload patched IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: youpple-YouTube-21.39.4-unsigned
+          path: out/youpple-YouTube-21.39.4-unsigned.ipa
+          if-no-files-found: error

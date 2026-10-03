@@ -1,0 +1,47 @@
+name: Build patched IPA
+
+on:
+  workflow_dispatch:
+    inputs:
+      ipa_url:
+        description: Direct HTTPS URL to a decrypted YouTube IPA
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: macos-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        shell: bash
+        run: |
+          brew install make ldid dpkg uv
+          if [ ! -d "$HOME/theos" ]; then
+            git clone --recursive https://github.com/theos/theos.git "$HOME/theos"
+          fi
+          echo "THEOS=$HOME/theos" >> "$GITHUB_ENV"
+          uv tool install "cyan @ git+https://github.com/asdfzxcvbn/pyzule-rw"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Download IPA
+        env:
+          IPA_URL: ${{ inputs.ipa_url }}
+        run: |
+          mkdir -p ipa
+          curl --fail --location --retry 3 "$IPA_URL" -o ipa/YouTube.ipa
+
+      - name: Build and inject
+        run: |
+          ./scripts/pipeline.sh ipa/YouTube.ipa
+
+      - name: Upload patched IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: youpple-unsigned-ipa
+          path: out/*.ipa
+          if-no-files-found: error

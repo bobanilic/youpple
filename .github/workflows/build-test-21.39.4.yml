@@ -1,5 +1,6 @@
 name: Build YouTube 21.39.4 test IPA
 
+# One-shot device test build for the exact IPA supplied in chat.
 on:
   push:
     branches:
